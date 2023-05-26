@@ -54,6 +54,8 @@
 
 ">>"                    {yylval.node = new Node(yytext, "RIGHT_SHIFT", 0); return RIGHT_SHIFT; }
 "<<"                    {yylval.node = new Node(yytext, "LEFT_SHIFT", 0); return LEFT_SHIFT; }
+">"                     {yylval.node = new Node(yytext, "GREATER_THAN", 0); return GREATER_THANO; }
+"<"                     {yylval.node = new Node(yytext, "LESS_THAN", 0); return LESS_THAN; }
 ">="                    {yylval.node = new Node(yytext, "GREATER_THAN_OR_EQUAL_TO", 0); return GREATER_THAN_OR_EQUAL_TO; }
 "<="                    {yylval.node = new Node(yytext, "LESS_THAN_OR_EQUAL_TO", 0); return LESS_THAN_OR_EQUAL_TO; }
 "=="                    {yylval.node = new Node(yytext, "EQUAL_TO", 0); return EQUAL_TO; }
