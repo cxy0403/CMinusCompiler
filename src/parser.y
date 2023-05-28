@@ -37,7 +37,7 @@
 %token <node> STRUCT
 %token <node> SWITCH
 %token <node> TYPEDEF
-%token <node> union
+%token <node> UNION
 %token <node> VOID
 %token <node> VOLATILE
 %token <node> WHILE
@@ -277,6 +277,9 @@ Stm:
     | BREAK SEMICOLON{
         $$ = new Node("", "Stm", 2, $1, $2);
     }
+    | CONTINUE SEMICOLON{
+        $$ = new Node("", "Stm", 2, $1, $2);
+    }
     | IF LEFT_PAREN Exp RIGHT_PAREN Stm %prec LOWER_THAN_ELSE {
         $$ = new Node("", "Stm", 5, $1, $2, $3, $4, $5);
     }
@@ -373,6 +376,14 @@ Stm:
         $$->setValueType($1->getValueType());
     }
     | Exp DIVIDE Exp {
+        $$ = new Node("", "Exp", 3, $1, $2, $3);
+        $$->setValueType($1->getValueType());
+    }
+    | Exp RIGHT_SHIFT Exp {
+        $$ = new Node("", "Exp", 3, $1, $2, $3);
+        $$->setValueType($1->getValueType());
+    }
+    | Exp LEFT_SHIFT Exp {
         $$ = new Node("", "Exp", 3, $1, $2, $3);
         $$->setValueType($1->getValueType());
     }
@@ -517,6 +528,20 @@ Stm:
             printf("Error Occur at Line %d: Syntax Error.\n", @3.first_line);
         }
     }
+    | Exp RIGHT_SHIFT error SEMICOLON  {
+        if(mistakeRecord[@3.first_line-1] == 0){
+            mistakeRecord[@3.first_line-1] = 1;
+            mistake++;
+            printf("Error Occur at Line %d: Syntax Error.\n", @3.first_line);
+        }
+    }
+    | Exp LEFT_SHIFT error SEMICOLON  {
+        if(mistakeRecord[@3.first_line-1] == 0){
+            mistakeRecord[@3.first_line-1] = 1;
+            mistake++;
+            printf("Error Occur at Line %d: Syntax Error.\n", @3.first_line);
+        }
+    }
     | IDENTIFIER LEFT_PAREN error SEMICOLON {
         if(mistakeRecord[@3.first_line-1] == 0){
             mistakeRecord[@3.first_line-1] = 1;
@@ -530,6 +555,15 @@ Stm:
             mistake++;
             printf("Error Occur at Line %d: wrong expression between \"[\" and \"]\".\n", @3.first_line);
         }
+    }
+    | Exp QUESTION_MARK Exp COLON Exp {
+        $$ = new Node("", "Exp", 5, $1, $2, $3, $4, $5);
+    }
+    | Exp INCREMENT {
+        $$ = new Node("", "Exp", 2, $1, $2);
+    }
+    | Exp DECREMENT {
+        $$ = new Node("", "Exp", 2, $1, $2);
     }
     ;
 
