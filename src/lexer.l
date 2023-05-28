@@ -22,6 +22,7 @@
 "for"                   {yylval.node = new Node(yytext, "FOR", 0); return FOR; }
 "goto"                  {yylval.node = new Node(yytext, "GOTO", 0); return GOTO; }
 "if"                    {yylval.node = new Node(yytext, "IF", 0); return IF; }
+"bool"                  {yylval.node = new Node(yytext, "BOOL", 0); return BOOL; }
 "int"                   {yylval.node = new Node(yytext, "INT", 0); return INT; }
 "long"                  {yylval.node = new Node(yytext, "LONG", 0); return LONG; }
 "register"              {yylval.node = new Node(yytext, "REGISTER", 0); return REGISTER; }
