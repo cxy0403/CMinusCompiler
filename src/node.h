@@ -4,7 +4,7 @@ using namespace std;
 
 class Node{
 public:
-    Node(string nodeName, string nodeType, int lineNo){
+    Node(char * nodeName, string nodeType, int lineNo){
         this->nodeName = nodeName;
         this->nodeType = nodeType;
         this->lineNo = lineNo;

@@ -1,6 +1,6 @@
 %{
     #include <stdio.h>
-    #include <node.h>
+    #include "node.h"
     int yylex(void);
     extern Node* ROOT;
     int mistakeRecord[4096]={0};
@@ -11,7 +11,7 @@
 %}
 
 %union{ 
-    Node* node;
+    struct Node* node;
     }
 
 %token <node> AUTO
