@@ -1,0 +1,5 @@
+
+#define TYPE_INT 10007
+#define TYPE_FLOAT 10008
+#define TYPE_CHAR 10009
+#define ARRAY 10017

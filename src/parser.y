@@ -1,5 +1,6 @@
 %{
     #include <stdio.h>
+    #include "type.h"
     #include "node.h"
     int yylex(void);
     extern Node* ROOT;
