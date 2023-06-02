@@ -14,6 +14,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/GlobalVariable.h>
 #include "IRGenerator.h"
+#include "type.h"
 using namespace std;
 
 class Node{
