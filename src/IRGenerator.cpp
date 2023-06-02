@@ -4,7 +4,7 @@ using namespace llvm;
 
 IRGenerator Generator;
 
-void IRGenerator::Generate(){
+IRGenerator::IRGenerator(){
     module = new Module("main", context);
 
     //获取类型参数; 生成函数，链接外部C库函数
@@ -17,6 +17,10 @@ void IRGenerator::Generate(){
     auto ScanfType = FunctionType::get(builder.getInt32Ty(), true);
     scanf = Function::Create(ScanfType, Function::ExternalLinkage, Twine("scanf"), this->module);
     scanf->setCallingConv(CallingConv::C);
+}
+
+IRGenerator::~IRGenerator(){
+    
 }
 
 Function* IRGenerator::CurrentFunction(){
