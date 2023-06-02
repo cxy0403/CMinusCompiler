@@ -1,4 +1,4 @@
-
+#define TYPE_STRING 10006
 #define TYPE_INT 10007
 #define TYPE_FLOAT 10008
 #define TYPE_CHAR 10009

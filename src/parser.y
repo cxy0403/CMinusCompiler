@@ -19,6 +19,7 @@
 %token <node> BREAK
 %token <node> CASE
 %token <node> CHAR DOUBLE FLOAT INT BOOL
+%token <node> CHAR_LIT INT_LIT FLOAT_LIT STRING_LIT
 %token <node> CONST
 %token <node> CONTINUE
 %token <node> DEFAULT
@@ -421,20 +422,20 @@ Stm:
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType($1->getValueType());
     }
-    | INT {
+    | INT_LIT {
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType(TYPE_INT);
     }
-    | FLOAT {
+    | FLOAT_LIT {
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType(TYPE_FLOAT);
     }
-    | BOOL {
+    | STRING_LIT {
         $$ = new Node("", "Exp", 1, $1);
-        $$->setValueType(BOOL);
+        $$->setValueType(TYPE_STRING);
     }
     // '$ch'
-    | CHAR {
+    | CHAR_LIT {
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType(TYPE_CHAR);
     }

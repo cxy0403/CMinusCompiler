@@ -45,7 +45,7 @@
 [0-9]+\.[0-9]+          {yylval.node = new Node(yytext, "FLOAT_LIT", 0); return FLOAT_LIT; } //yylval.float_val = atof(yytext); 
 0x[0-9a-fA-F]+          {yylval.node = new Node(yytext, "INT_LIT", 0);  return INT_LIT; } //yylval.int_val = strtol(yytext, NULL, 16);
 
-[a-zA-Z_][a-zA-Z0-9_]*  {yylval.node = new Node(yytext, "IDENTIFIER", 0); yylval.str_val = strdup(yytext); return IDENTIFIER; } 
+[a-zA-Z_][a-zA-Z0-9_]*  {yylval.node = new Node(yytext, "IDENTIFIER", 0);  return IDENTIFIER; } //yylval.str_val = strdup(yytext);
 
 \"([^\\\n]|(\\.))*?\"   {yylval.node = new Node(yytext, "STRING_LIT", 0); return STRING_LIT; }//yylval.str_val = strdup(yytext);
 \'\\.\'                 {yylval.node = new Node(yytext, "CHAR_LIT", 0); return CHAR_LIT; }  // yylval.char_val = yytext[1];  //L?'.'|u?'.'|U?'.'|'\\x[0-9a-fA-F]+'|'\\[0-7]{1,3}'
@@ -56,7 +56,7 @@
 
 ">>"                    {yylval.node = new Node(yytext, "RIGHT_SHIFT", 0); return RIGHT_SHIFT; }
 "<<"                    {yylval.node = new Node(yytext, "LEFT_SHIFT", 0); return LEFT_SHIFT; }
-">"                     {yylval.node = new Node(yytext, "GREATER_THAN", 0); return GREATER_THANO; }
+">"                     {yylval.node = new Node(yytext, "GREATER_THAN", 0); return GREATER_THAN; }
 "<"                     {yylval.node = new Node(yytext, "LESS_THAN", 0); return LESS_THAN; }
 ">="                    {yylval.node = new Node(yytext, "GREATER_THAN_OR_EQUAL_TO", 0); return GREATER_THAN_OR_EQUAL_TO; }
 "<="                    {yylval.node = new Node(yytext, "LESS_THAN_OR_EQUAL_TO", 0); return LESS_THAN_OR_EQUAL_TO; }

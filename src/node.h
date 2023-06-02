@@ -1,3 +1,6 @@
+#ifndef __NODE__
+#define __NODE__
+
 #include <string>
 #include <stdarg.h>
 using namespace std;
@@ -38,3 +41,5 @@ private:
     Node** childNode;
     int lineNo;
 };
+
+#endif
