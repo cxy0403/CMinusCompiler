@@ -3,22 +3,14 @@
 
 #include <string>
 #include <stdarg.h>
-#include <llvm/IR/Value.h>
-#include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Function.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/IR/CallingConv.h>
-#include <llvm/IR/IRPrintingPasses.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/GlobalVariable.h>
-#include "IRGenerator.h"
 #include "type.h"
+
 using namespace std;
 
 class Node{
 public:
+    Node** childNode;
+
     Node(char * nodeName, string nodeType, int lineNo){
         this->nodeName = nodeName;
         this->nodeType = nodeType;
@@ -42,16 +34,20 @@ public:
         va_end(l);
         
     }
-    int getValueType(){return valueType;}
+    string getNodeName(){return nodeName;}
+    string getNodeType(){return nodeType;}
+    int getValueType();
+    int getChildNum(){return childNum;}
     void setValueType(int type){valueType = type;}
-    llvm::Type* getLlvmType(int type, int arraySize); 
+    int isType(string type);
+    int isName(string name);
+    
 
 private:
     string nodeName;
     string nodeType;
     int valueType;
     int childNum;
-    Node** childNode;
     int lineNo;
 };
 
