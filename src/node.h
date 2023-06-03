@@ -46,7 +46,7 @@ public:
     void setValueType(int type){valueType = type;}
     llvm::Type* getLlvmType(int type, int arraySize); 
 
-private:
+
     string nodeName;
     string nodeType;
     int valueType;

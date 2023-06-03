@@ -1,5 +1,5 @@
 
-OBJS = parser.o lexer.o IRGenerator.o node.o main.o
+OBJS = parser.o lexer.o IRGenerator.o node.o jsonGenerator.o main.o
 CC = /usr/bin/clang++-10
 LLVM_AS = /usr/lib/llvm-10/bin/llvm-as 
 LLI = /usr/lib/llvm-10/bin/lli
