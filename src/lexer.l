@@ -92,19 +92,6 @@
 [\t ]+                  /* ignore whitespace or tab*/
 .                       { fprintf(stderr, "Invalid character: %s\n", yytext); }
 %%
-
-int main(int argc, char **argv)
-{
-    if (argc > 1) {
-        if (!(yyin = fopen(argv[1],"r"))) {
-            perror(argv[1]);
-            return 1;
-        }
-    }
-    yylex();
-    return 0;
-    // suggest union{ int int_val;float float_val;string str_val; char char_val;}
-}
 int yywrap()
 {
 	return 1;

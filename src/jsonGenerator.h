@@ -9,7 +9,6 @@ using namespace std;
 
 class jsonGenerator {
     public:
-    Node* rootNode;
     jsonGenerator();
     Json::Value jsonGen(Node * node);
     ~jsonGenerator();

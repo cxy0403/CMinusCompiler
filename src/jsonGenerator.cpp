@@ -1,5 +1,9 @@
 #include "jsonGenerator.h"
 
+jsonGenerator::jsonGenerator(){}
+
+jsonGenerator::~jsonGenerator(){}
+
 Json::Value jsonGenerator::jsonGen(Node * node){
     Node* cur_node = node;
     Json::Value root;
