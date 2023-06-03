@@ -1,5 +1,5 @@
 
-OBJS = parser.o lexer.o code_gen.o node.o main.o
+OBJS = parser.o lexer.o IRGenerator.o node.o main.o
 CC = /usr/bin/clang++-10
 LLVM_AS = /usr/lib/llvm-10/bin/llvm-as 
 LLI = /usr/lib/llvm-10/bin/lli
@@ -41,6 +41,6 @@ temp_test:
 	$(CC) ../test/test0.bc -o ../test/test0_exe
 
 clean:
-	$(RM) -rf $(OBJS) grammar.cpp grammar.hpp parse lexical.cpp 
+	$(RM) -rf $(OBJS) parser.cpp parser.hpp parse lexer.cpp 
 	$(RM) -f ../test/*.ll ../test/*.bc ../test/test0/test0_exe ../test/test1/test1_exe ../test/test2/test2_exe ../test/test3/test3_exe
 	$(RM) -f ../test/test1/*.bc ../test/test1/*.ll ../test/test2/*.bc ../test/test2/*.ll ../test/test3/*.bc ../test/test3/*.ll 
