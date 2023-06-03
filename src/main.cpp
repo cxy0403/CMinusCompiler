@@ -4,6 +4,7 @@
 #include "parser.hpp"
 #include "node.h"
 #include <fstream>
+#include <iostream>
 
 #include "llvm/Support/TargetSelect.h"
 
@@ -12,7 +13,10 @@ extern IRGenerator *Generator;
 extern int yyparse();
 
 int main() {
+    cout << "system begin......" << endl;
+    cout << "parsing start......" << endl;
     yyparse();
+    cout << "parsing ends......" << endl;
     auto JS = new jsonGenerator();
     auto root = JS->jsonGen(ROOT);
 
@@ -23,8 +27,6 @@ int main() {
         astJson.close();
         cout << "json write to " << jsonFile << endl;
     }
-
-
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();

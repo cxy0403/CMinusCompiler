@@ -1,44 +1,32 @@
+%option yylineno
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "parser.hpp"
-#include "node.h"
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #include "parser.hpp"
+    #include "IRGenerator.h"
+    #include "jsonGenerator.h"
+    #include "node.h"
+    int yycolumn=1;
+    #define YY_USER_ACTION \
+        yylloc.first_line=yylineno;\
+        yylloc.last_line=yylineno;\
+        yylloc.first_column=yycolumn;\
+        yylloc.last_column=yylloc.first_column+yyleng-1;\
+        yycolumn+=yyleng;
+    extern int mistakeRecord[4096];
+    extern int mistake;
 %}
 
 %%
-"auto"                  {yylval.node = new Node(yytext, "AUTO", 0); return AUTO; }
 "break"                 {yylval.node = new Node(yytext, "BREAK", 0); return BREAK; }
-"case"                  {yylval.node = new Node(yytext, "CASE", 0); return CASE; }
 "char"                  {yylval.node = new Node(yytext, "CHAR", 0); return CHAR; }
-"const"                 {yylval.node = new Node(yytext, "CONST", 0); return CONST; }
-"continue"              {yylval.node = new Node(yytext, "CONTINUE", 0); return CONTINUE; }
-"default"               {yylval.node = new Node(yytext, "DEFAULT", 0); return DEFAULT; }
-"do"                    {yylval.node = new Node(yytext, "DO", 0); return DO; }
-"double"                {yylval.node = new Node(yytext, "DOUBLE", 0); return DOUBLE; }
 "else"                  {yylval.node = new Node(yytext, "ELSE", 0); return ELSE; }
-"enum"                  {yylval.node = new Node(yytext, "ENUM", 0); return ENUM; }
-"extern"                {yylval.node = new Node(yytext, "EXTERN", 0); return EXTERN; }
 "float"                 {yylval.node = new Node(yytext, "FLOAT", 0); return FLOAT; }
-"for"                   {yylval.node = new Node(yytext, "FOR", 0); return FOR; }
-"goto"                  {yylval.node = new Node(yytext, "GOTO", 0); return GOTO; }
 "if"                    {yylval.node = new Node(yytext, "IF", 0); return IF; }
 "bool"                  {yylval.node = new Node(yytext, "BOOL", 0); return BOOL; }
 "int"                   {yylval.node = new Node(yytext, "INT", 0); return INT; }
-"long"                  {yylval.node = new Node(yytext, "LONG", 0); return LONG; }
-"register"              {yylval.node = new Node(yytext, "REGISTER", 0); return REGISTER; }
 "return"                {yylval.node = new Node(yytext, "RETURN", 0); return RETURN; }
-"short"                 {yylval.node = new Node(yytext, "SHORT", 0); return SHORT; }
-"signed"                {yylval.node = new Node(yytext, "SIGNED", 0); return SIGNED; }
-"sizeof"                {yylval.node = new Node(yytext, "SIZEOF", 0); return SIZEOF; }
-"static"                {yylval.node = new Node(yytext, "STATIC", 0); return STATIC; }
-"struct"                {yylval.node = new Node(yytext, "STRUCT", 0); return STRUCT; }
-"switch"                {yylval.node = new Node(yytext, "SWITCH", 0); return SWITCH; }
-"typedef"               {yylval.node = new Node(yytext, "TYPEDEF", 0); return TYPEDEF; }
-"union"                 {yylval.node = new Node(yytext, "UNION", 0); return UNION; }
-"unsigned"              {yylval.node = new Node(yytext, "UNSIGNED", 0); return UNSIGNED; }
-"void"                  {yylval.node = new Node(yytext, "VOID", 0); return VOID; }
-"volatile"              {yylval.node = new Node(yytext, "VOLATILE", 0); return VOLATILE; }
 "while"                 {yylval.node = new Node(yytext, "WHILE", 0); return WHILE; }
 
 0|[1-9][0-9]*           {yylval.node = new Node(yytext, "INT_LIT", 0); return INT_LIT; } // yylval.int_val = atoi(yytext); 
@@ -87,12 +75,12 @@
 "\{"                    {yylval.node = new Node(yytext, "LEFT_BRACE", 0); return LEFT_BRACE; }
 "\}"                    {yylval.node = new Node(yytext, "RIGHT_BRACE", 0); return RIGHT_BRACE; }
 
-"\r"                    {yylval.node = new Node(yytext, "CR", 0); return CR; }
-"\n"                    {yylval.node = new Node(yytext, "LF", 0); return LF; }
+"\r"                    {;}//CR
+"\n"                    {yycolumn=1; }
 [\t ]+                  /* ignore whitespace or tab*/
-.                       { fprintf(stderr, "Invalid character: %s\n", yytext); }
+.                       { mistake++;fprintf(stderr, "Invalid character: %s\n", yytext); }
 %%
-int yywrap()
+int yywrap(void)
 {
 	return 1;
 }
