@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 
+IRGenerator *Generator;
 using namespace llvm;
 
 stack<llvm::BasicBlock *> GlobalAfterBB;
