@@ -43,6 +43,7 @@
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 
+%left LOW_PRIORITY
 %left SEMICOLON
 %right COMMA
 %right ASSIGNMENT
@@ -148,7 +149,49 @@ FunDec:
         }
     }
     ;
+<<<<<<< HEAD
 
+=======
+/*复杂语句*/
+CompSt:
+    LEFT_BRACE DefList StList RIGHT_BRACE{
+        $$ = new Node("", "CompSt", 4, $1, $2, $3, $4);
+    }
+    | LEFT_BRACE DefList StList %prec LOW_PRIORITY{
+        if(mistakeRecord[@3.first_line-1] == 0){
+            mistakeRecord[@3.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @3.first_line);
+        }
+    }
+    | error RIGHT_BRACE {
+        if(mistakeRecord[@1.first_line-1] == 0){
+            mistakeRecord[@1.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @1.first_line);
+        }
+    }
+    ;
+/*变量声明*/
+VarDec:
+    IDENTIFIER {
+        $$ = new Node("", "VarDec", 1, $1);
+    }
+    | IDENTIFIER LEFT_BRACKET INT_LIT RIGHT_BRACKET {
+        $$ = new Node("", "VarDec", 4, $1, $2, $3, $4);
+    }
+    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET {
+        $$ = new Node("", "VarDec", 3, $1, $2, $3);
+    }
+    | IDENTIFIER LEFT_BRACKET error RIGHT_BRACKET {
+        if(mistakeRecord[@3.first_line-1] == 0){
+            mistakeRecord[@3.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @3.first_line);
+        }
+    }
+    ;
+>>>>>>> 1c84bd6027d6fb46b8577d53d8f2102bfa260e95
 ParameterList:
     ParameterDec COMMA ParameterList {
         $$ = new Node("", "ParameterList", 3, $1, $2, $3);
@@ -384,7 +427,7 @@ Exp:
     }
     | NOT Exp {
         $$ = new Node("", "Exp", 2, $1, $2);
-        $$->setValueType(BOOL);
+        $$->setValueType(TYPE_BOOL);
     }
     | IDENTIFIER LEFT_PAREN Args RIGHT_PAREN {
         $$ = new Node("", "Exp", 4, $1, $2, $3, $4);
@@ -403,7 +446,7 @@ Exp:
         $$ = new Node("", "Exp", 3, $1, $2, $3);
         $$->setValueType($1->getValueType() + ARRAY);
     }
-    | IDENTIFIER {
+    | IDENTIFIER %prec LOW_PRIORITY{
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType($1->getValueType());
     }
