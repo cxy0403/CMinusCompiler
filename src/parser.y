@@ -399,7 +399,7 @@ Stm:
     }
     | NOT Exp {
         $$ = new Node("", "Exp", 2, $1, $2);
-        $$->setValueType(BOOL);
+        $$->setValueType(TYPE_BOOL);
     }
     | IDENTIFIER LEFT_PAREN Args RIGHT_PAREN {
         $$ = new Node("", "Exp", 4, $1, $2, $3, $4);
