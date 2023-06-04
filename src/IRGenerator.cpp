@@ -104,13 +104,13 @@ Type* IRGenerator::getLlvmType(int type, int arraySize){
 }
 
 void IRGenerator::Generate(Node* root) {
-    cout<<"begin generate:"<<endl;
+    //cout<<"begin generate:"<<endl;
     ReadNode(root);
     this->module->print(outs(), nullptr);
 }
 
 Value* IRGenerator::ReadNode(Node* root){
-    cout<<root->nodeType<<endl;
+    //cout<<root->nodeType<<endl;
     if (root->isType("ExtDef")) {
         if (root->childNode[1]->isType("ExtDecList")) return ReadNodeVar(root);
         else return ReadNodeFunc(root);
@@ -124,8 +124,8 @@ Value* IRGenerator::ReadNode(Node* root){
 
 Value* IRGenerator::ReadNodeExp(Node* root){
     string child0str = root->childNode[0]->getNodeName();
-    cout <<"this nodeType:"<< root->childNode[0]->nodeType << endl;
-    cout << "this child0 nodeType:" <<root->childNode[0]->childNode[0]->nodeType << endl;
+    //cout <<"this nodeType:"<< root->childNode[0]->nodeType << endl;
+    
     if (root->childNode[0]->isType("INT_LIT")) {
         return builder.getInt32(stoi(root->childNode[0]->getNodeName()));
     } 
@@ -258,11 +258,17 @@ Value* IRGenerator::ReadNodeExp(Node* root){
     }
     // Exp op Exp
     else {
+        //cout<<"get its child1"<<endl;
+        //cout<<"its nodeType"<<root->childNode[1]->nodeType<<endl;
         if (root->childNode[1]->isType("ASSIGNMENT") ) {
             Value *left = ReadNodeAddr(root->childNode[0]);
             Value *right = ReadNodeExp(root->childNode[2]);
+            //cout<<left<<" "<<right<<endl;
+            //cout<<"reaching right yet?"<<endl;
+            //cout<< right->getType() << "  "<< left->getType()<<endl;
             if (right->getType() != left->getType()->getPointerElementType()) 
                 right = this->typeCast(right, left->getType()->getPointerElementType());
+            //cout<<"get assignment"<<endl;
             return builder.CreateStore(right, left);
         }
         else if (root->childNode[1]->isType("GREATER_THAN") ) {
@@ -396,7 +402,7 @@ Value* IRGenerator::ReadNodeVar(Node* root){
 
 // Stmt
 Value* IRGenerator::ReadNodeStmt(Node* root){
-    cout<<"irBuildStmt: "<<root->childNode[0]->nodeType<<" "<<root->childNode[0]->nodeName<<endl;
+    //cout<<"irBuildStmt: "<<root->nodeType<<" "<<root->childNode[0]->nodeName<<endl;
     
     if (root->childNode[0]->isType("Exp")) 
         return ReadNodeExp(root->childNode[0]);
@@ -494,7 +500,7 @@ Value* IRGenerator::ReadNodeCompSt(Node* root){
     } 
     
     while (true) {
-        cout << "stmtNodes:" << stmtNodes << endl;
+        //cout << "stmtNodes:" << stmtNodes << endl;
         if (stmtNodes != nullptr && stmtNodes->getChildNum() == 2) {
             ReadNodeStmt(stmtNodes->childNode[0]);
             stmtNodes = stmtNodes->childNode[1];
