@@ -10,7 +10,7 @@ int Node::isType(string type){
 
 int Node::isName(string name){
     int res = 0;
-    if((this->nodeType).compare(name) == 0) res = 1;
+    if((this->nodeName).compare(name) == 0) res = 1;
     return res;
 }
 
