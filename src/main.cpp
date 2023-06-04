@@ -19,9 +19,10 @@ int main() {
     //cout << yylex() << endl;
     /*int token;
     while ((token = yylex())) {
-        printf("Token: %d", token);
+        printf("Token: %d,\n", token);
         if (token == 0) break;
-    }*/
+    }
+    */
     yyparse();
     cout << "parsing ends......" << endl;
     auto JS = new jsonGenerator();

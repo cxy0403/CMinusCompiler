@@ -4,6 +4,8 @@
 #include <string>
 #include <stdarg.h>
 #include "type.h"
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -21,6 +23,7 @@ public:
         this->nodeName = nodeName;
         this->nodeType = nodeType;
         this->childNum = childNum;
+        this->childNode = new Node * [childNum];
 
         //获取子节点
         va_list l;
@@ -32,6 +35,7 @@ public:
         }
         this->lineNo = this->childNode[0]->lineNo;
         va_end(l);
+        //cout << nodeName << " " << nodeType << endl;
         
     }
     string getNodeName(){return nodeName;}
