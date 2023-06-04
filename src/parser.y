@@ -2,7 +2,7 @@
     #include <stdio.h>
     #include "type.h"
     #include "node.h"
-    int yylex(void);
+    int yylex();
     extern Node* ROOT;
     int mistakeRecord[4096]={0};
     int mistake = 0;
@@ -15,33 +15,12 @@
     struct Node* node;
     }
 
-%token <node> AUTO
-%token <node> BREAK
-%token <node> CASE
+%token <node> BREAK CONTINUE
 %token <node> CHAR DOUBLE FLOAT INT BOOL
 %token <node> CHAR_LIT INT_LIT FLOAT_LIT STRING_LIT
-%token <node> CONST
-%token <node> CONTINUE
-%token <node> DEFAULT
-%token <node> DO
 %token <node> ELSE
-%token <node> ENUM
-%token <node> EXTERN
-%token <node> FOR
-%token <node> GOTO
 %token <node> IF
-%token <node> LONG SHORT
-%token <node> REGISTER
 %token <node> RETURN
-%token <node> SIGNED UNSIGNED
-%token <node> SIZEOF
-%token <node> STATIC
-%token <node> STRUCT
-%token <node> SWITCH
-%token <node> TYPEDEF
-%token <node> UNION
-%token <node> VOID
-%token <node> VOLATILE
 %token <node> WHILE
 %token <node> IDENTIFIER
 
@@ -102,6 +81,15 @@ ExtDef:
     }
     ;
 
+/*外部变量声明列表*/
+ExtDecList:
+    VarDec {
+        $$ = new Node("", "ExtDecList", 1, $1);
+    }
+    | VarDec COMMA ExtDecList {
+        $$ = new Node("", "ExtDecList", 3, $1, $2, $3);
+    }
+    ;
 Specifier:
     INT {
         $$ = new Node("", "Specifier", 1, $1);
@@ -117,15 +105,26 @@ Specifier:
     }
     ;
 
-/*外部变量声明列表*/
-ExtDecList:
-    VarDec {
-        $$ = new Node("", "ExtDecList", 1, $1);
+/*变量声明*/
+VarDec:
+    IDENTIFIER {
+        $$ = new Node("", "VarDec", 1, $1);
     }
-    | VarDec COMMA ExtDecList {
-        $$ = new Node("", "ExtDecList", 3, $1, $2, $3);
+    | IDENTIFIER LEFT_BRACKET INT_LIT RIGHT_BRACKET {
+        $$ = new Node("", "VarDec", 4, $1, $2, $3, $4);
+    }
+    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET {
+        $$ = new Node("", "VarDec", 3, $1, $2, $3);
+    }
+    | IDENTIFIER LEFT_BRACKET error RIGHT_BRACKET {
+        if(mistakeRecord[@3.first_line-1] == 0){
+            mistakeRecord[@3.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @3.first_line);
+        }
     }
     ;
+
 /*函数声明*/
 FunDec:
     IDENTIFIER LEFT_PAREN ParameterList RIGHT_PAREN {
@@ -149,6 +148,23 @@ FunDec:
         }
     }
     ;
+
+ParameterList:
+    ParameterDec COMMA ParameterList {
+        $$ = new Node("", "ParameterList", 3, $1, $2, $3);
+    }
+    | ParameterDec {
+        $$ = new Node("", "ParameterList", 1, $1);
+    }
+    ;
+
+
+ParameterDec:
+    Specifier VarDec {
+        $$ = new Node("", "ParameterDec", 2, $1, $2);
+    }
+    ;
+
 /*复杂语句*/
 CompSt:
     LEFT_BRACE DefList StList RIGHT_BRACE{
@@ -169,47 +185,6 @@ CompSt:
         }
     }
     ;
-/*变量声明*/
-VarDec:
-    IDENTIFIER {
-        $$ = new Node("", "VarDec", 1, $1);
-    }
-    | IDENTIFIER LEFT_BRACKET INT_LIT RIGHT_BRACKET {
-        $$ = new Node("", "VarDec", 4, $1, $2, $3, $4);
-    }
-    | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET {
-        $$ = new Node("", "VarDec", 3, $1, $2, $3);
-    }
-    | IDENTIFIER LEFT_BRACKET error RIGHT_BRACKET {
-        if(mistakeRecord[@3.first_line-1] == 0){
-            mistakeRecord[@3.first_line-1] = 1;
-            mistake ++;
-            printf("Error at Line %d : Syntax Error.\n", @3.first_line);
-        }
-    }
-    ;
-ParameterList:
-    ParameterDec COMMA ParameterList {
-        $$ = new Node("", "ParameterList", 3, $1, $2, $3);
-    }
-    | ParameterDec {
-        $$ = new Node("", "ParameterList", 1, $1);
-    }
-    ;
-ParameterDec:
-    Specifier VarDec {
-        $$ = new Node("", "ParameterDec", 2, $1, $2);
-    }
-    ;
-
-DefList:
-    {
-        $$ = nullptr;
-    }
-    | Def DefList {
-        $$ = new Node("", "DefList", 2, $1, $2);
-    }
-    ;
 
 StList:
     {
@@ -217,42 +192,6 @@ StList:
     }
     | Stm StList {
         $$ = new Node("", "CompSt", 2, $1, $2);
-    }
-    ;
-
-Def:
-    Specifier DecList SEMICOLON{
-        $$ = new Node("", "Def", 3, $1, $2, $3);
-    }
-    | Specifier error SEMICOLON{
-        if(mistakeRecord[@2.first_line-1] == 0){
-            mistakeRecord[@2.first_line-1] = 1;
-            mistake ++;
-            printf("Error at Line %d : Syntax Error.\n", @2.first_line);
-        }
-    }
-    | error DecList SEMICOLON{
-        if(mistakeRecord[@1.first_line-1] == 0){
-            mistakeRecord[@1.first_line-1] = 1;
-            mistake ++;
-            printf("Error at Line %d : Syntax Error.\n", @1.first_line);
-        }
-    }
-    | Specifier DecList {
-        if(mistakeRecord[@2.first_line-1] == 0){
-            mistakeRecord[@2.first_line-1] = 1;
-            mistake ++;
-            printf("Error at Line %d : Syntax Error.\n", @2.first_line);
-        }
-    }
-    ;
-
-DecList:
-    VarDec {
-        $$ = new Node("", "DecList", 1, $1);
-    }
-    | VarDec COMMA DecList {
-        $$ = new Node("", "DecList", 3, $1, $2, $3);
     }
     ;
 
@@ -325,6 +264,52 @@ Stm:
             mistake ++;
             printf("Error at Line %d : Syntax Error.\n", @1.first_line);
         }
+    }
+    ;
+
+
+DefList:
+    {
+        $$ = nullptr;
+    }
+    | Def DefList {
+        $$ = new Node("", "DefList", 2, $1, $2);
+    }
+    ;
+
+Def:
+    Specifier DecList SEMICOLON{
+        $$ = new Node("", "Def", 3, $1, $2, $3);
+    }
+    | Specifier error SEMICOLON{
+        if(mistakeRecord[@2.first_line-1] == 0){
+            mistakeRecord[@2.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @2.first_line);
+        }
+    }
+    | error DecList SEMICOLON{
+        if(mistakeRecord[@1.first_line-1] == 0){
+            mistakeRecord[@1.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @1.first_line);
+        }
+    }
+    | Specifier DecList {
+        if(mistakeRecord[@2.first_line-1] == 0){
+            mistakeRecord[@2.first_line-1] = 1;
+            mistake ++;
+            printf("Error at Line %d : Syntax Error.\n", @2.first_line);
+        }
+    }
+    ;
+
+DecList:
+    VarDec {
+        $$ = new Node("", "DecList", 1, $1);
+    }
+    | VarDec COMMA DecList {
+        $$ = new Node("", "DecList", 3, $1, $2, $3);
     }
     ;
 
@@ -575,5 +560,6 @@ Exp:
     }
     | Exp {
         $$ = new Node("", "Args", 1, $1);
+        printf("\tArgs Detected\n");
     }
     ;

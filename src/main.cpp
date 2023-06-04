@@ -11,10 +11,17 @@
 extern Node *ROOT;
 extern IRGenerator *Generator;
 extern int yyparse();
+extern int yylex();
 
 int main() {
     cout << "system begin......" << endl;
     cout << "parsing start......" << endl;
+    //cout << yylex() << endl;
+    /*int token;
+    while ((token = yylex())) {
+        printf("Token: %d", token);
+        if (token == 0) break;
+    }*/
     yyparse();
     cout << "parsing ends......" << endl;
     auto JS = new jsonGenerator();

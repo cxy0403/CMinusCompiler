@@ -21,6 +21,7 @@
 %%
 "break"                 {yylval.node = new Node(yytext, "BREAK", 0); return BREAK; }
 "char"                  {yylval.node = new Node(yytext, "CHAR", 0); return CHAR; }
+"continue"              {yylval.node = new Node(yytext, "CONTINUE", 0); return CONTINUE; }
 "else"                  {yylval.node = new Node(yytext, "ELSE", 0); return ELSE; }
 "float"                 {yylval.node = new Node(yytext, "FLOAT", 0); return FLOAT; }
 "if"                    {yylval.node = new Node(yytext, "IF", 0); return IF; }
