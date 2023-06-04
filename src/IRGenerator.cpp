@@ -119,24 +119,24 @@ Value* IRGenerator::ReadNode(Node* root){
     int childNum = root->getChildNum();
     for ( int i = 0; i < childNum; i++) 
         if (root->childNode[i] != nullptr) ReadNode(root->childNode[i]);
-    cout<<"first generate"<<endl;
     return NULL;
 }
 
 Value* IRGenerator::ReadNodeExp(Node* root){
     string child0str = root->childNode[0]->getNodeName();
-
-    if (root->childNode[0]->isType("INT")) {
+    cout <<"this nodeType:"<< root->childNode[0]->nodeType << endl;
+    cout << "this child0 nodeType:" <<root->childNode[0]->childNode[0]->nodeType << endl;
+    if (root->childNode[0]->isType("INT_LIT")) {
         return builder.getInt32(stoi(root->childNode[0]->getNodeName()));
     } 
-    else if (root->childNode[0]->isType("FLOAT")) {
+    else if (root->childNode[0]->isType("FLOAT_LIT")) {
         return ConstantFP::get(builder.getFloatTy(), APFloat(stof(child0str)));
     }
     else if (root->childNode[0]->isType("BOOL")) {
         if (root->childNode[0]->isType("true")) return builder.getInt1(true);
         else return builder.getInt1(false);
     }
-    else if (root->childNode[0]->isType("CHAR")) {
+    else if (root->childNode[0]->isType("CHAR_LIT")) {
         // char --> '$ch'
         
         if (child0str.size() == 3)
@@ -167,7 +167,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
             }
         }
     }
-    else if (root->childNode[0]->isType("STRING")) {
+    else if (root->childNode[0]->isType("STRING_LIT")) {
         // string --> "$ch"
         string str = child0str.substr(1, child0str.length() - 2);
         Constant *strConst = ConstantDataArray::getString(context, str);
@@ -180,7 +180,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
         return varPtr;
         //return builder.getInt8(this->childNode[0]->nodeName->at(1));
     }
-    else if (root->childNode[0]->isType("ID") ) {
+    else if (root->childNode[0]->isType("IDENTIFIER") ) {
         if (root->getChildNum() == 1) {
             // always return var value
             Value * varPtr = this->FindValue(child0str);
@@ -195,7 +195,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
         // ID() function
         // ID[] array or point
         else if (root->getChildNum() == 3) {
-            if (root->childNode[1]->isType("LP") ) {
+            if (root->childNode[1]->isType("LEFT_PAREN") ) {
                 Function *fun = this->module->getFunction(child0str);
                 if (fun == nullptr) {
                     throw logic_error("[ERROR] Funtion not defined: " + child0str);
@@ -209,7 +209,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
         }
         else if (root->getChildNum() == 4) {
             // ID LP Args RP
-            if (root->childNode[1]->isType("LP") ) {
+            if (root->childNode[1]->isType("LEFT_PAREN") ) {
                 if (root->childNode[0]->isName("print") ) {
                     return ReadNodePrint(root);
                 }
@@ -245,7 +245,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
             }
         }
     }
-    else if (root->childNode[0]->isType("LP") ) 
+    else if (root->childNode[0]->isType("LEFT_PAREN") ) 
         return ReadNodeExp(root->childNode[1]);
     else if (root->childNode[0]->isType("MINUS") ) 
         return builder.CreateNeg(ReadNodeExp(root->childNode[1]), "tmpNeg");
@@ -258,25 +258,40 @@ Value* IRGenerator::ReadNodeExp(Node* root){
     }
     // Exp op Exp
     else {
-        if (root->childNode[1]->isType("ASSIGNOP") ) {
+        if (root->childNode[1]->isType("ASSIGNMENT") ) {
             Value *left = ReadNodeAddr(root->childNode[0]);
             Value *right = ReadNodeExp(root->childNode[2]);
             if (right->getType() != left->getType()->getPointerElementType()) 
                 right = this->typeCast(right, left->getType()->getPointerElementType());
             return builder.CreateStore(right, left);
         }
-        else if (root->childNode[1]->isType("RELOP") ) {
+        else if (root->childNode[1]->isType("GREATER_THAN") ) {
+            return ReadNodeRELOP(root);
+        }
+        else if (root->childNode[1]->isType("LESS_THAN") ) {
+            return ReadNodeRELOP(root);
+        }
+        else if (root->childNode[1]->isType("GREATER_THAN_OR_EQUAL_TO") ) {
+            return ReadNodeRELOP(root);
+        }
+        else if (root->childNode[1]->isType("LESS_THAN_OR_EQUAL_TO") ) {
+            return ReadNodeRELOP(root);
+        }
+        else if (root->childNode[1]->isType("EQUAL_TO") ) {
+            return ReadNodeRELOP(root);
+        }
+        else if (root->childNode[1]->isType("NOT_EQUAL_TO") ) {
             return ReadNodeRELOP(root);
         }
         else {
             Value *left = ReadNodeExp(root->childNode[0]);
             Value *right = ReadNodeExp(root->childNode[2]);
-            if (root->childNode[1]->isType("AND") ) {
+            if (root->childNode[1]->isType("LOGICAL_AND") ) {
                 if (left->getType() != Type::getInt1Ty(context) || right->getType() != Type::getInt1Ty(context)) 
                     throw logic_error("cannot use types other than bool in and exp");
                 return builder.CreateAnd(left, right, "tmpAnd");
             }
-            else if (root->childNode[1]->isType("OR") ) {
+            else if (root->childNode[1]->isType("LOGICAL_OR") ) {
                 if (left->getType() != Type::getInt1Ty(context) || right->getType() != Type::getInt1Ty(context)) 
                     throw logic_error("cannot use types other than bool in or exp");
                 return builder.CreateOr(left, right, "tmpOR");
@@ -301,8 +316,8 @@ Value* IRGenerator::ReadNodeExp(Node* root){
                 }
                 if (root->childNode[1]->isType("PLUS") ) return (left->getType() == Type::getFloatTy(context)) ? builder.CreateFAdd(left, right, "addtmpf") : builder.CreateAdd(left, right, "addtmpi");
                 else if (root->childNode[1]->isType("MINUS") ) return (left->getType() == Type::getFloatTy(context)) ? builder.CreateFSub(left, right, "subtmpf") : builder.CreateSub(left, right, "subtmpi");
-                else if (root->childNode[1]->isType("STAR") ) return (left->getType() == Type::getFloatTy(context)) ? builder.CreateFMul(left, right, "multmpf") : builder.CreateMul(left, right, "multmpi");
-                else if (root->childNode[1]->isType("DIV") ) return (left->getType() == Type::getFloatTy(context)) ? builder.CreateFDiv(left, right, "divtmpf") : builder.CreateSDiv(left, right, "divtmpi");
+                else if (root->childNode[1]->isType("MULTIPLY") ) return (left->getType() == Type::getFloatTy(context)) ? builder.CreateFMul(left, right, "multmpf") : builder.CreateMul(left, right, "multmpi");
+                else if (root->childNode[1]->isType("DIVIDE") ) return (left->getType() == Type::getFloatTy(context)) ? builder.CreateFDiv(left, right, "divtmpf") : builder.CreateSDiv(left, right, "divtmpi");
             }
         }
     }
@@ -329,8 +344,10 @@ Value* IRGenerator::ReadNodeFunc(Node* root){
         int index = 0;
         for (auto &Arg : function->args()) Arg.setName(params->at(index++).first);
     }
+    
     //Sub routine
     ReadNodeCompSt(root->childNode[2]);
+    
     //Pop back
     this->PopFunction();
     return function;
@@ -379,12 +396,20 @@ Value* IRGenerator::ReadNodeVar(Node* root){
 
 // Stmt
 Value* IRGenerator::ReadNodeStmt(Node* root){
-    if (root->childNode[0]->isType("Exp")) return ReadNodeExp(root->childNode[0]);
-    else if (root->childNode[0]->isType("IF")) return ReadNodeIf(root);
-    else if (root->childNode[0]->isType("WHILE")) return ReadNodeWhile(root);
-    else if (root->childNode[0]->isType("RETURN")) return ReadNodeReturn(root);
-    else if (root->childNode[0]->isType("BREAK")) return builder.CreateBr(GlobalAfterBB.top());
-    else if (root->childNode[0]->isType("CompSt")) return ReadNodeCompSt(root->childNode[0]);
+    cout<<"irBuildStmt: "<<root->childNode[0]->nodeType<<" "<<root->childNode[0]->nodeName<<endl;
+    
+    if (root->childNode[0]->isType("Exp")) 
+        return ReadNodeExp(root->childNode[0]);
+    else if (root->childNode[0]->isType("IF")) 
+        return ReadNodeIf(root);
+    else if (root->childNode[0]->isType("WHILE"))  
+        return ReadNodeWhile(root);
+    else if (root->childNode[0]->isType("RETURN")) 
+        return ReadNodeReturn(root);
+    else if (root->childNode[0]->isType("BREAK")) 
+        return builder.CreateBr(GlobalAfterBB.top());
+    else if (root->childNode[0]->isType("CompSt")) 
+        return ReadNodeCompSt(root->childNode[0]);
     return NULL;
 }
 
@@ -459,6 +484,7 @@ Value* IRGenerator::ReadNodeReturn(Node* root){
 Value* IRGenerator::ReadNodeCompSt(Node* root){
     Node * defNodes = root->childNode[1];
     Node * stmtNodes = root->childNode[2];
+    
     while (true) {
         if (defNodes != nullptr && defNodes->getChildNum() == 2) {
             ReadNodeVar(defNodes->childNode[0]);
@@ -466,13 +492,19 @@ Value* IRGenerator::ReadNodeCompSt(Node* root){
         }
         else break;
     } 
+    
     while (true) {
+        cout << "stmtNodes:" << stmtNodes << endl;
         if (stmtNodes != nullptr && stmtNodes->getChildNum() == 2) {
             ReadNodeStmt(stmtNodes->childNode[0]);
             stmtNodes = stmtNodes->childNode[1];
         }
-        else break;
+        else {
+            break;
+            
+        }
     }
+    
     return NULL;
 }
 
@@ -625,7 +657,7 @@ vector<pair<string, int>>* IRGenerator::getNameList(Node* root, int type){
 }
 
 vector<pair<string, Type*>>* IRGenerator::getParam(Node* root){
-    if (!(root->isType("VarList"))) {
+    if (!(root->isType("ParameterList"))) {
         throw logic_error("[ERROR]Wrong function call : getParam.");
         return NULL;
     }
