@@ -64,6 +64,7 @@
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 
+%left LOW_PRIORITY
 %left SEMICOLON
 %right COMMA
 %right ASSIGNMENT
@@ -154,7 +155,7 @@ CompSt:
     LEFT_BRACE DefList StList RIGHT_BRACE{
         $$ = new Node("", "CompSt", 4, $1, $2, $3, $4);
     }
-    | LEFT_BRACE DefList StList {
+    | LEFT_BRACE DefList StList %prec LOW_PRIORITY{
         if(mistakeRecord[@3.first_line-1] == 0){
             mistakeRecord[@3.first_line-1] = 1;
             mistake ++;
@@ -418,7 +419,7 @@ Exp:
         $$ = new Node("", "Exp", 3, $1, $2, $3);
         $$->setValueType($1->getValueType() + ARRAY);
     }
-    | IDENTIFIER {
+    | IDENTIFIER %prec LOW_PRIORITY{
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType($1->getValueType());
     }
