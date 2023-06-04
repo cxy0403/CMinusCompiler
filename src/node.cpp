@@ -2,50 +2,39 @@
 
 Node* ROOT;
 
-llvm::Type* getLlvmType(int type, int arraySize){
-        switch (type) {
-        case TYPE_INT:
-            return llvm::Type::getInt32Ty(context);
-            break;
-        case TYPE_INT + ARRAY:
-            if (arraySize > 0) {
-                return llvm::ArrayType::get(llvm::Type::getInt32Ty(context), arraySize);
-            } else {
-                return llvm::Type::getInt32PtrTy(context);
-            }
-            break;
-        case TYPE_FLOAT:
-            return llvm::Type::getFloatTy(context);
-            break;
-        case TYPE_FLOAT + ARRAY:
-            if (arraySize > 0) {
-                return llvm::ArrayType::get(llvm::Type::getFloatTy(context), arraySize);
-            } else {
-                return llvm::Type::getFloatPtrTy(context);
-            }
-            break;
-        case TYPE_BOOL:
-            return llvm::Type::getInt1Ty(context);
-            break;
-        case TYPE_BOOL + ARRAY:
-            if (arraySize > 0) {
-                return llvm::ArrayType::get(llvm::Type::getInt1Ty(context), arraySize);
-            } else {
-                return llvm::Type::getInt1PtrTy(context);
-            }
-            break;
-        case TYPE_CHAR:
-            return llvm::Type::getInt8Ty(context);
-            break;
-        case TYPE_CHAR + ARRAY:
-            if (arraySize > 0) {
-                return llvm::ArrayType::get(llvm::Type::getInt8Ty(context), arraySize);
-            } else {
-                return llvm::Type::getInt8PtrTy(context);
-            }
-            break;
-        default:
-            break;
+int Node::isType(string type){
+    int res = 0;
+    if((this->nodeType).compare(type) == 0) res = 1;
+    return res;
+}
+
+int Node::isName(string name){
+    int res = 0;
+    if((this->nodeType).compare(name) == 0) res = 1;
+    return res;
+}
+
+int Node::getValueType() {
+    if (this->isType("Specifier")) {
+        // Specifier --> Type
+        if (this->childNode[0]->isType("int")) {
+            return TYPE_INT;
+        } 
+        else if (this->childNode[0]->isType("float")) {
+            return TYPE_FLOAT;
+        } 
+        else if (this->childNode[0]->isType("char")) {
+            return TYPE_CHAR;
+        } 
+        else if (this->childNode[0]->isType("boolean")) {
+            return TYPE_BOOL;
+        } 
+        else {
+
+        }
+    } else if (this->isType("Exp")) {
+        return this->valueType;
     }
-    return llvm::Type::getVoidTy(context);
+    // Error
+    return -1;
 }

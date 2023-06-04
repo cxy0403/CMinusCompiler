@@ -174,7 +174,7 @@ VarDec:
     IDENTIFIER {
         $$ = new Node("", "VarDec", 1, $1);
     }
-    | IDENTIFIER LEFT_BRACKET INT RIGHT_BRACKET {
+    | IDENTIFIER LEFT_BRACKET INT_LIT RIGHT_BRACKET {
         $$ = new Node("", "VarDec", 4, $1, $2, $3, $4);
     }
     | IDENTIFIER LEFT_BRACKET RIGHT_BRACKET {
@@ -216,7 +216,7 @@ StList:
         $$ = nullptr;
     }
     | Stm StList {
-        $$ = new Node("", "StList", 2, $1, $2);
+        $$ = new Node("", "CompSt", 2, $1, $2);
     }
     ;
 
@@ -264,7 +264,7 @@ Stm:
         $$ = new Node("", "Stm", 1, $1);
     }
     | RETURN SEMICOLON{
-        $$ = new Node("", "Stm", 1, $1);
+        $$ = new Node("", "Stm", 2, $1, $2);
     }
     | RETURN Exp SEMICOLON{
         $$ = new Node("", "Stm", 3, $1, $2, $3);
@@ -305,7 +305,7 @@ Stm:
             printf("Error at Line %d : Syntax Error.\n", @2.first_line);
         }
     }
-    | WHILE error RIGHT_BRACKET {
+    | WHILE error RIGHT_BRACE {
         if(mistakeRecord[@2.first_line-1] == 0){
             mistakeRecord[@2.first_line-1] = 1;
             mistake ++;
@@ -328,7 +328,7 @@ Stm:
     }
     ;
 
-    Exp:  
+Exp:  
 	Exp ASSIGNMENT Exp {
 		$$ = new Node("", "Exp", 3, $1, $2, $3);
         $$->setValueType($3->getValueType());
