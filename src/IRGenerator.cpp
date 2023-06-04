@@ -1,4 +1,6 @@
 #include "IRGenerator.h"
+#include <fstream>
+#include <iostream>
 
 using namespace llvm;
 
@@ -6,17 +8,17 @@ IRGenerator* Generator;
 stack<llvm::BasicBlock *> GlobalAfterBB;
 
 IRGenerator::IRGenerator(){
-    Generator->module = new Module("main", context);
-
+    this->module = new Module("main", context);
+   
     //获取类型参数; 生成函数，链接外部C库函数
     std::vector<Type*> args;
     args.push_back(builder.getInt8PtrTy());
     auto PrintfType = FunctionType::get(builder.getInt32Ty(), makeArrayRef(args), true);
-    printf = Function::Create(PrintfType, Function::ExternalLinkage, Twine("printf"), Generator->module);
+    printf = Function::Create(PrintfType, Function::ExternalLinkage, Twine("printf"), module);
     printf->setCallingConv(CallingConv::C);
-
+    
     auto ScanfType = FunctionType::get(builder.getInt32Ty(), true);
-    scanf = Function::Create(ScanfType, Function::ExternalLinkage, Twine("scanf"), Generator->module);
+    scanf = Function::Create(ScanfType, Function::ExternalLinkage, Twine("scanf"), module);
     scanf->setCallingConv(CallingConv::C);
 }
 
@@ -37,9 +39,9 @@ void IRGenerator::PopFunction(){
 
 Value* IRGenerator::FindValue(std::string name){
     //查找当前函数符号表。若空，查找全局变量
-    Value* res = Generator->FunctionStack.top()->getValueSymbolTable()->lookup(name);
+    Value* res = FunctionStack.top()->getValueSymbolTable()->lookup(name);
     if (res == nullptr){
-        res = Generator->module->getGlobalVariable(name, true);
+        res = module->getGlobalVariable(name, true);
         if (res == nullptr){
             std::cout<<"[ERROR]Undeclared variable: " << name <<std::endl;
         }
@@ -103,12 +105,13 @@ Type* IRGenerator::getLlvmType(int type, int arraySize){
 }
 
 void IRGenerator::Generate(Node* root) {
+    cout<<"begin generate:"<<endl;
     ReadNode(root);
-    Generator->module->print(outs(), nullptr);
+    module->print(outs(), nullptr);
 }
 
 Value* IRGenerator::ReadNode(Node* root){
-    
+    cout<<root->nodeType<<endl;
     if (root->isType("ExtDef")) {
         if (root->childNode[1]->isType("ExtDecList")) return ReadNodeVar(root);
         else return ReadNodeFunc(root);
@@ -117,7 +120,7 @@ Value* IRGenerator::ReadNode(Node* root){
     int childNum = root->getChildNum();
     for ( int i = 0; i < childNum; i++) 
         if (root->childNode[i] != nullptr) ReadNode(root->childNode[i]);
-    
+    cout<<"first generate"<<endl;
     return NULL;
 }
 
@@ -169,7 +172,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
         // string --> "$ch"
         string str = child0str.substr(1, child0str.length() - 2);
         Constant *strConst = ConstantDataArray::getString(context, str);
-        Value *globalVar = new GlobalVariable(*Generator->module, strConst->getType(), true, GlobalValue::PrivateLinkage, strConst, "_Const_String_");
+        Value *globalVar = new GlobalVariable(*module, strConst->getType(), true, GlobalValue::PrivateLinkage, strConst, "_Const_String_");
         vector<Value*> indexList;
         indexList.push_back(builder.getInt32(0));
         indexList.push_back(builder.getInt32(0));
@@ -181,7 +184,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
     else if (root->childNode[0]->isType("ID") ) {
         if (root->getChildNum() == 1) {
             // always return var value
-            Value * varPtr = Generator->FindValue(child0str);
+            Value * varPtr = FindValue(child0str);
             if (varPtr->getType()->isPointerTy() && !(varPtr->getType()->getPointerElementType()->isArrayTy())) {
                 return builder.CreateLoad(varPtr->getType()->getPointerElementType(), varPtr, "tmpvar");
             }
@@ -194,7 +197,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
         // ID[] array or point
         else if (root->getChildNum() == 3) {
             if (root->childNode[1]->isType("LP") ) {
-                Function *fun = Generator->module->getFunction(child0str);
+                Function *fun = module->getFunction(child0str);
                 if (fun == nullptr) {
                     throw logic_error("[ERROR] Funtion not defined: " + child0str);
                 }
@@ -202,7 +205,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
             }
             else {
                 // var addr
-                return Generator->FindValue(child0str);
+                return FindValue(child0str);
             }
         }
         else if (root->getChildNum() == 4) {
@@ -220,7 +223,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
                 if (root->childNode[0]->isName("scanf") ) {
                     throw logic_error("[ERROR] Funtion not defined: " + child0str);
                 }
-                Function *fun = Generator->module->getFunction(child0str);
+                Function *fun = module->getFunction(child0str);
                 if (fun == nullptr) {
                     throw logic_error("[ERROR] Funtion not defined: " + child0str);
                 }
@@ -228,7 +231,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
                 return builder.CreateCall(fun, *args, "calltmp");
             }
             else {
-                Value * arrayValue = Generator->FindValue(child0str);
+                Value * arrayValue = FindValue(child0str);
                 Value * indexValue = ReadNodeExp(root->childNode[2]);
                 if (indexValue->getType() != Type::getInt32Ty(context)) {
                     indexValue = this->typeCast(indexValue, Type::getInt32Ty(context));
@@ -317,8 +320,8 @@ Value* IRGenerator::ReadNodeFunc(Node* root){
         for (auto it : *params) argTypes.push_back(it.second);
     }
     FunctionType *funcType = FunctionType::get(getLlvmType(root->childNode[0]->getValueType(), 0), argTypes, false);
-    Function *function = Function::Create(funcType, GlobalValue::ExternalLinkage, root->childNode[1]->childNode[0]->getNodeName(), Generator->module);
-    Generator->PushFunction(function);
+    Function *function = Function::Create(funcType, GlobalValue::ExternalLinkage, root->childNode[1]->childNode[0]->getNodeName(), module);
+    PushFunction(function);
     //Block
     BasicBlock *newBlock = BasicBlock::Create(context, "entrypoint", function);
     builder.SetInsertPoint(newBlock);
@@ -330,7 +333,7 @@ Value* IRGenerator::ReadNodeFunc(Node* root){
     //Sub routine
     ReadNodeCompSt(root->childNode[2]);
     //Pop back
-    Generator->PopFunction();
+    PopFunction();
     return function;
 }
 
@@ -346,12 +349,12 @@ Value* IRGenerator::ReadNodeVar(Node* root){
         } else {
             llvmType = getLlvmType(type + ARRAY, it.second - ARRAY);
         }
-        if (Generator->isStackEmpty()) {
-            Value *tmp = Generator->module->getGlobalVariable(it.first, true);
+        if (isStackEmpty()) {
+            Value *tmp = module->getGlobalVariable(it.first, true);
             if(tmp != nullptr){
                 throw logic_error("Redefined Variable: " + it.first);
             }
-            GlobalVariable* globalVar = new GlobalVariable(*Generator->module, llvmType, false, GlobalValue::PrivateLinkage, 0, it.first);
+            GlobalVariable* globalVar = new GlobalVariable(*module, llvmType, false, GlobalValue::PrivateLinkage, 0, it.first);
             if (llvmType->isArrayTy()) {
                 std::vector<Constant*> constArrayElem;
                 Constant* constElem = ConstantInt::get(llvmType->getArrayElementType(), 0);
@@ -368,11 +371,11 @@ Value* IRGenerator::ReadNodeVar(Node* root){
             //}
         }
         else {            
-            Value *tmp = Generator->FunctionStack.top()->getValueSymbolTable()->lookup(it.first);
+            Value *tmp = FunctionStack.top()->getValueSymbolTable()->lookup(it.first);
             if(tmp != nullptr){
                 throw logic_error("Redefined Variable: " + it.first);
             }            
-            Value* alloc = CreateEntryBlockAlloca(Generator->CurrentFunction(), it.first, llvmType);
+            Value* alloc = CreateEntryBlockAlloca(CurrentFunction(), it.first, llvmType);
         }
     }
     return NULL;
@@ -390,7 +393,7 @@ Value* IRGenerator::ReadNodeStmt(Node* root){
 }
 
 Value* IRGenerator::ReadNodeWhile(Node* root){
-    Function *TheFunction = Generator->CurrentFunction();
+    Function *TheFunction = CurrentFunction();
     BasicBlock *condBB = BasicBlock::Create(context, "cond", TheFunction);
     BasicBlock *loopBB = BasicBlock::Create(context, "loop", TheFunction);
     BasicBlock *afterBB = BasicBlock::Create(context, "afterLoop", TheFunction);
@@ -421,7 +424,7 @@ Value* IRGenerator::ReadNodeIf(Node* root){
     Value *condValue = ReadNodeExp(root->childNode[2]), *thenValue = nullptr, *elseValue = nullptr;
     condValue = builder.CreateICmpNE(condValue, ConstantInt::get(Type::getInt1Ty(context), 0, true), "ifCond");
 
-    Function *TheFunction = Generator->CurrentFunction();
+    Function *TheFunction = CurrentFunction();
     BasicBlock *thenBB = BasicBlock::Create(context, "then", TheFunction);
     BasicBlock *elseBB = BasicBlock::Create(context, "else", TheFunction);
     BasicBlock *mergeBB = BasicBlock::Create(context, "merge", TheFunction);
@@ -532,17 +535,17 @@ Value* IRGenerator::ReadNodePrint(Node* root){
     }
     formatStr += "\n";
     auto formatConst = ConstantDataArray::getString(context, formatStr.c_str());
-    auto formatStrVar = new GlobalVariable(*(Generator->module), ArrayType::get(builder.getInt8Ty(), formatStr.size() + 1), true, GlobalValue::ExternalLinkage, formatConst, ".str");
+    auto formatStrVar = new GlobalVariable(*(module), ArrayType::get(builder.getInt8Ty(), formatStr.size() + 1), true, GlobalValue::ExternalLinkage, formatConst, ".str");
     auto zero = Constant::getNullValue(builder.getInt32Ty());
     Constant* indices[] = {zero, zero};
     auto varRef = ConstantExpr::getGetElementPtr(formatStrVar->getType()->getElementType(), formatStrVar, indices);
     args->insert(args->begin(), varRef);
-    return builder.CreateCall(Generator->printf, *args, "printf");
+    return builder.CreateCall(printf, *args, "printf");
 }
 
 Value* IRGenerator::ReadNodePrintf(Node* root){
     vector<Value *> *args = getPrintArgs(root->childNode[2]);
-    return builder.CreateCall(Generator->printf, *args, "printf");
+    return builder.CreateCall(printf, *args, "printf");
 }
 
 Value* IRGenerator::ReadNodeScan(Node* root){
@@ -558,7 +561,7 @@ Value* IRGenerator::ReadNodeScan(Node* root){
         else throw logic_error("[ERROR]Invalid type to read.");
     }
     args->insert(args->begin(), builder.CreateGlobalStringPtr(formatStr));
-    return builder.CreateCall(Generator->scanf, *args, "scanf");
+    return builder.CreateCall(scanf, *args, "scanf");
 }
 
 // Exp --> ID
@@ -566,9 +569,9 @@ Value* IRGenerator::ReadNodeScan(Node* root){
 // Exp --> ID[]
 Value* IRGenerator::ReadNodeAddr(Node* root){
     if (root->getChildNum() == 1) {
-        return Generator->FindValue(root->childNode[0]->getNodeName());
+        return FindValue(root->childNode[0]->getNodeName());
     } else if (root->getChildNum() == 4) {
-        Value * arrayValue = Generator->FindValue(root->childNode[0]->getNodeName());
+        Value * arrayValue = FindValue(root->childNode[0]->getNodeName());
         Value * indexValue = ReadNodeExp(root->childNode[2]);
         vector<Value*> indexList;
         indexList.push_back(builder.getInt32(0));
@@ -576,7 +579,7 @@ Value* IRGenerator::ReadNodeAddr(Node* root){
         // var value
         return builder.CreateInBoundsGEP(arrayValue, ArrayRef<Value*>(indexList), "tmpvar");
     } else if(root->getChildNum() == 3) {
-        return Generator->FindValue(root->childNode[0]->getNodeName());
+        return FindValue(root->childNode[0]->getNodeName());
     } else {
         //ERROR
     }

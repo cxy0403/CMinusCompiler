@@ -35,10 +35,13 @@ int main() {
         astJson.close();
         cout << "json write to " << jsonFile << endl;
     }
+    cout << "start initialization" << endl;
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
+    cout << "end initialization" << endl;
     Generator = new IRGenerator();
+    cout << "start IR generate" << endl;
     Generator->Generate(ROOT);
 
     return 0;
