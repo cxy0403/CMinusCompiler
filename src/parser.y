@@ -47,12 +47,14 @@
 %left SEMICOLON
 %right COMMA
 %right ASSIGNMENT
+%left QUESTION_MARK
 %left LOGICAL_OR
 %left LOGICAL_AND
 %left EQUAL_TO NOT_EQUAL_TO
 %left LESS_THAN LESS_THAN_OR_EQUAL_TO GREATER_THAN GREATER_THAN_OR_EQUAL_TO 
 %left RIGHT_SHIFT LEFT_SHIFT
 %left PLUS MINUS
+%left INCREMENT DECREMENT
 %left MULTIPLY DIVIDE
 %right NOT
 %left LEFT_PAREN RIGHT_PAREN LEFT_BRACKET RIGHT_BRACKET LEFT_BRACE RIGHT_BRACE
@@ -191,7 +193,7 @@ ParameterDec:
     ;
 
 StList:
-    {
+    %prec LOW_PRIORITY{
         $$ = nullptr;
     }
     | Stm StList {
@@ -212,7 +214,7 @@ Stm:
     | RETURN Exp SEMICOLON{
         $$ = new Node("", "Stm", 3, $1, $2, $3);
     }
-    | RETURN Exp {
+    | RETURN Exp %prec LOW_PRIORITY{
         if(mistakeRecord[@2.first_line-1] == 0){
             mistakeRecord[@2.first_line-1] = 1;
             mistake ++;
@@ -262,7 +264,7 @@ Stm:
             printf("Error at Line %d : Syntax Error.\n", @1.first_line);
         }
     }
-    | Exp {
+    | Exp %prec LOW_PRIORITY{
         if(mistakeRecord[@1.first_line-1] == 0){
             mistakeRecord[@1.first_line-1] = 1;
             mistake ++;
@@ -273,7 +275,7 @@ Stm:
 
 
 DefList:
-    {
+    %prec LOW_PRIORITY{
         $$ = nullptr;
     }
     | Def DefList {
