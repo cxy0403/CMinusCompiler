@@ -56,6 +56,9 @@ int main() {
 void printTree(Node * node,int level){
     level++;
     
+    if(node==nullptr){
+    	return;
+    }
     int childrennum = node->childNum;
     int i,j;
     for (j=0;j<level;j++){
