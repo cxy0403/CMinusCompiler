@@ -17,7 +17,7 @@
 
 %token <node> BREAK CONTINUE
 %token <node> CHAR DOUBLE FLOAT INT BOOL
-%token <node> CHAR_LIT INT_LIT FLOAT_LIT STRING_LIT
+%token <node> CHAR_LIT INT_LIT FLOAT_LIT STRING_LIT BOOL_LIT
 %token <node> ELSE
 %token <node> IF
 %token <node> RETURN
@@ -108,6 +108,9 @@ Specifier:
     }
     | CHAR {
         $$ = new Node("", "Specifier", 1, $1);
+    }
+    | BOOL {
+	$$ = new Node("", "Specifier", 1, $1);
     }
     ;
 
@@ -430,6 +433,10 @@ Exp:
         $$ = new Node("", "Exp", 1, $1);
         $$->setValueType(TYPE_CHAR);
     }
+    | BOOL_LIT {
+    	$$ = new Node("", "Exp", 1, $1);
+    	$$->setValueType(TYPE_BOOL);
+    }
     | Exp ASSIGNMENT error SEMICOLON {
         if(mistakeRecord[@3.first_line-1] == 0){
             mistakeRecord[@3.first_line-1] = 1;
@@ -566,6 +573,5 @@ Exp:
     }
     | Exp {
         $$ = new Node("", "Args", 1, $1);
-        printf("\tArgs Detected\n");
     }
     ;

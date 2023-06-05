@@ -17,16 +17,16 @@ int Node::isName(string name){
 int Node::getValueType() {
     if (this->isType("Specifier")) {
         // Specifier --> Type
-        if (this->childNode[0]->isType("int")) {
+        if (this->childNode[0]->isType("INT")) {
             return TYPE_INT;
         } 
-        else if (this->childNode[0]->isType("float")) {
+        else if (this->childNode[0]->isType("FLOAT")) {
             return TYPE_FLOAT;
         } 
-        else if (this->childNode[0]->isType("char")) {
+        else if (this->childNode[0]->isType("CHAR")) {
             return TYPE_CHAR;
         } 
-        else if (this->childNode[0]->isType("boolean")) {
+        else if (this->childNode[0]->isType("BOOL")) {
             return TYPE_BOOL;
         } 
         else {
