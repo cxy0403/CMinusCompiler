@@ -26,9 +26,12 @@
 "float"                 {yylval.node = new Node(yytext, "FLOAT", 0); return FLOAT; }
 "if"                    {yylval.node = new Node(yytext, "IF", 0); return IF; }
 "bool"                  {yylval.node = new Node(yytext, "BOOL", 0); return BOOL; }
+"boolean"               {yylval.node = new Node(yytext, "BOOL", 0); return BOOL; }
 "int"                   {yylval.node = new Node(yytext, "INT", 0); return INT; }
 "return"                {yylval.node = new Node(yytext, "RETURN", 0); return RETURN; }
 "while"                 {yylval.node = new Node(yytext, "WHILE", 0); return WHILE; }
+"true"                  {yylval.node = new Node(yytext, "BOOL_LIT", 0); return BOOL_LIT; }
+"false"                 {yylval.node = new Node(yytext, "BOOL_LIT", 0); return BOOL_LIT; }
 
 0|[1-9][0-9]*           {yylval.node = new Node(yytext, "INT_LIT", 0); return INT_LIT; } // yylval.int_val = atoi(yytext); 
 [0-9]+\.[0-9]+          {yylval.node = new Node(yytext, "FLOAT_LIT", 0); return FLOAT_LIT; } //yylval.float_val = atof(yytext); 
@@ -39,6 +42,7 @@
 \"([^\\\n]|(\\.))*?\"   {yylval.node = new Node(yytext, "STRING_LIT", 0); return STRING_LIT; }//yylval.str_val = strdup(yytext);
 \'\\.\'                 {yylval.node = new Node(yytext, "CHAR_LIT", 0); return CHAR_LIT; }  // yylval.char_val = yytext[1];  //L?'.'|u?'.'|U?'.'|'\\x[0-9a-fA-F]+'|'\\[0-7]{1,3}'
 \'[^\\']\'              {yylval.node = new Node(yytext, "CHAR_LIT", 0); return CHAR_LIT; } // yylval.char_val = yytext[1]; 
+
 
 \/\/.*$                /* ignore single-line comments */
 \/\*([^*]|\*[^\/])*\*\/ /* ignore multi-line comments */

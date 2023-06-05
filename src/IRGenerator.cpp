@@ -132,7 +132,7 @@ Value* IRGenerator::ReadNodeExp(Node* root){
     else if (root->childNode[0]->isType("FLOAT_LIT")) {
         return ConstantFP::get(builder.getFloatTy(), APFloat(stof(child0str)));
     }
-    else if (root->childNode[0]->isType("BOOL")) {
+    else if (root->childNode[0]->isType("BOOL_LIT")) {
         if (root->childNode[0]->isType("true")) return builder.getInt1(true);
         else return builder.getInt1(false);
     }
